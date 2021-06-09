@@ -1,17 +1,19 @@
 local p = {}
 
 local json = require("Module:Json")
-local utils = require("Module:LuaUtils")
+local Lua = require("Module:Lua")
+local Logic = require("Module:Logic")
+local Template = require("Module:Template")
 local htmlCreate = mw.html.create
 
 local _args
 local _frame
 
-local config = utils.lua.moduleExists("Module:Match/Config") and require("Module:Match/Config") or {}
+local config = Lua.moduleExists("Module:Match/Config") and require("Module:Match/Config") or {}
 local MAX_NUM_MAPS = config.MAX_NUM_MAPS or 20
 
 function p.get(frame)
-	return p.luaGet(frame, utils.frame.getArgs(frame))
+	return p.luaGet(frame, require("Module:Arguments").getArgs(frame))
 end
 
 function p.luaGet(frame, args)
@@ -24,7 +26,7 @@ function p.luaGet(frame, args)
   	local matchExtradata = json.parse(_args.extradata or "{}")
   	local stream = json.parse(_args.stream or "{}")
   	stream.date = mw.getContentLanguage():formatDate('r', _args.date)
-	stream.finished = utils.misc.readBool(_args.finished) and "true" or ""
+	stream.finished = Logic.readBool(_args.finished) and "true" or ""
   
   	-- parameter
   	local vods = {}
@@ -47,7 +49,7 @@ function p.luaGet(frame, args)
   	local body = htmlCreate("div"):addClass("brkts-popup-body")
   	body = addFlexRow(body, {
 	  		htmlCreate("center"):wikitext(
-				utils.frame.protectedExpansion(frame, "countdown", stream))
+				Template.safeExpand(frame, "countdown", stream))
 	  			:css("display","block")
 	  			:css("margin","auto")
 		},
@@ -56,7 +58,7 @@ function p.luaGet(frame, args)
   	for index = 1, MAX_NUM_MAPS do
 		local game = "match2game" .. index .. "_"
 		local map = _args[game .. "map"]
-		if not utils.misc.isEmpty(map) then
+		if not Logic.isEmpty(map) then
 	  		local winner = _args[game .. "winner"]
 	  		
 			local extradata, err = json.parse(_args[game .. "extradata"])
@@ -64,9 +66,9 @@ function p.luaGet(frame, args)
 	  		local centerNode = htmlCreate("div")
 		  			:addClass("brkts-popup-spaced")
 		  			:node(htmlCreate("div"):node("[[" .. map .. "]]"))
-	  		if utils.misc.readBool(extradata.ot) then
+	  		if Logic.readBool(extradata.ot) then
 				centerNode:node(htmlCreate("div"):node("- OT"))
-				if not utils.misc.isEmpty(extradata.otlength) then
+				if not Logic.isEmpty(extradata.otlength) then
 		  			centerNode:node(htmlCreate("div"):node("(" .. extradata.otlength .. ")"))
 		  		end
 			end
@@ -85,7 +87,7 @@ function p.luaGet(frame, args)
 						  "[[File:GreenCheck.png|14x14px|link=]]" or
 						  "[[File:NoCheck.png|link=]]")
 			}
-	  		if not utils.misc.isEmpty(extradata.comment) then
+	  		if not Logic.isEmpty(extradata.comment) then
 				table.insert(gameElements, breakNode())
 				table.insert(gameElements, htmlCreate("div")
 		  			:node(extradata.comment)
@@ -95,7 +97,7 @@ function p.luaGet(frame, args)
 	  		
 	  		-- add vods
 	  		local vod = _args[game .. "vod"]
-	  		if not utils.misc.isEmpty(vod) then
+	  		if not Logic.isEmpty(vod) then
 	  			vods[index] = vod
 			end
 	  	end
@@ -103,7 +105,7 @@ function p.luaGet(frame, args)
   	wrapper:node(body):node(breakNode())
   
   	-- comment
-  	if not utils.misc.isEmpty(matchExtradata.comment) then
+  	if not Logic.isEmpty(matchExtradata.comment) then
 		local comment = htmlCreate("div")
 			:addClass("brkts-popup-comment")
 			:css("white-space","normal")
@@ -118,7 +120,7 @@ function p.luaGet(frame, args)
   		:addClass("brkts-popup-footer")
   	local footerSpacer = htmlCreate("div")
   		:addClass("brkts-popup-spaced")
-  	if not utils.misc.isEmpty(matchExtradata.octane) then
+  	if not Logic.isEmpty(matchExtradata.octane) then
 		footerSet = true
 		footerSpacer:node("[[File:Octane_gg.png|14x14px|link=http://octane.gg/match/" ..
 	  		matchExtradata.octane ..
@@ -126,7 +128,7 @@ function p.luaGet(frame, args)
 	end
   	for index, vod in pairs(vods) do
 		footerSet = true
-		footerSpacer:node(utils.frame.protectedExpansion(frame, "vodlink", {
+		footerSpacer:node(Template.safeExpand(frame, "vodlink", {
 		  	gamenum = index,
 		  	vod = vod,
 		  	source = url
@@ -141,7 +143,7 @@ end
 
 function addFlexRow(wrapper, contentElements, class, style)
 	local node = htmlCreate("div"):addClass("brkts-popup-body-element")
-  	if not utils.misc.isEmpty(class) then
+  	if not Logic.isEmpty(class) then
 		node:addClass(class)
  	end
   	for key, val in pairs(style or {}) do
@@ -161,12 +163,12 @@ end
 function displayOpponent(opponentIndex)
   	local opponent = "match2opponent" .. opponentIndex .. "_"
   	local opponentType = _args[opponent .. "type"]
-  	if opponentType == "team" or opponentType == "literal" or utils.misc.isEmpty(opponentType) then
+  	if opponentType == "team" or opponentType == "literal" or Logic.isEmpty(opponentType) then
 		local template = opponentIndex == 1 and "Team2Short" or "TeamShort"
-		return utils.frame.protectedExpansion(_frame, template, { _args[opponent .. "template"] or "TBD" })
+		return Template.safeExpand(_frame, template, { _args[opponent .. "template"] or "TBD" })
 	elseif opponentType == "solo" then
 		local template = opponentIndex == 1 and "Player2" or "Player"
-		return utils.frame.protectedExpansion(_frame, template, { _args[opponent .. "match2player1_name"], flag = _args[opponent .. "match2player1_flag"] })
+		return Template.safeExpand(_frame, template, { _args[opponent .. "match2player1_name"], flag = _args[opponent .. "match2player1_flag"] })
 	end
   	return ""
 end
