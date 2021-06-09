@@ -8,7 +8,7 @@ local Match = require("Module:Match")
 local LocalMatch = require("Module:Brkts/WikiSpecific")
 local Class = require('Module:Class')
 local Template = require('Module:Template')
-local LuaUtils = require('Module:LuaUtils')
+local Logic = require('Module:Logic')
 local DivTable = require('Module:DivTable')
 local Links = require('Module:Links')
 local Countdown = require('Module:Countdown')
@@ -55,7 +55,7 @@ function BigMatch:header(match, opponent1, opponent2, tournament)
 
     local stream = Json.parse(match.stream or '{}')
     stream.date = mw.getContentLanguage():formatDate('r', match.date)
-    stream.finished = LuaUtils.misc.readBool(match.finished) and 'true' or ''
+    stream.finished = Logic.readBool(match.finished) and 'true' or ''
     local divider = self:_createTeamSeparator(match.format, stream)
 
     local teamsRow =  mw.html.create('div'):addClass('fb-match-page-header-teams row')
