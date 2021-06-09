@@ -1,9 +1,10 @@
 local Array = require('Module:Array')
 local FnUtil = require('Module:FnUtil')
 local Json = require('Module:Json')
-local LuaUtils = require('Module:LuaUtils')
+local Lua = require('Module:Lua')
+local Variables = require('Module:Variables')
 local Table = require('Module:Table')
-local utils = require('Module:LuaUtils')
+local utils = require('Module:LuaUtils')--only needed for "utils.string.endsWith"
 
 local DisplayHelper = {}
 
@@ -38,7 +39,7 @@ end
 -- tries to get from var first, otherwise uses LPDB
 -- Deprecated
 function DisplayHelper.getMatches(bracketid)
-    local varData = utils.mw.varGet('match2bracket_' .. bracketid)
+    local varData = Variables.varDefault('match2bracket_' .. bracketid)
     if varData ~= nil then
         return Json.parse(varData)
     else
@@ -68,7 +69,7 @@ end
 -- @returns the type of a MatchGroup
 -- Deprecated
 function DisplayHelper.getMatchGroupType(bracketid)
-    local varData = utils.mw.varGet('match2bracket_' .. bracketid)
+    local varData = Variables.varDefault('match2bracket_' .. bracketid)
     if varData ~= nil then
         return Json.parse(Json.parse(varData)[1].match2bracketdata)['type']
     else
@@ -159,7 +160,7 @@ components.
 ]]
 DisplayHelper.DefaultMatchSummaryContainer = function(props)
     local DevFlags = require('Module:DevFlags')
-    local MatchSummaryModule = DevFlags.matchGroupDev and LuaUtils.lua.requireIfExists('Module:MatchSummary/dev')
+    local MatchSummaryModule = DevFlags.matchGroupDev and Lua.requireIfExists('Module:MatchSummary/dev')
         or require('Module:MatchSummary')
 
     if MatchSummaryModule.MatchSummaryContainer then
